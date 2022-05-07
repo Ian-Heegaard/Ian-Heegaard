@@ -1,0 +1,276 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualNetworks_Lab_vnet_name": {
+            "defaultValue": "Lab-vnet",
+            "type": "String"
+        },
+        "virtualMachines_LabUbuntu_name": {
+            "defaultValue": "LabUbuntu",
+            "type": "String"
+        },
+        "sshPublicKeys_LabUbuntu_key_name": {
+            "defaultValue": "LabUbuntu_key",
+            "type": "String"
+        },
+        "networkInterfaces_labubuntu643_name": {
+            "defaultValue": "labubuntu643",
+            "type": "String"
+        },
+        "publicIPAddresses_LabUbuntu_ip_name": {
+            "defaultValue": "LabUbuntu-ip",
+            "type": "String"
+        },
+        "networkSecurityGroups_LabUbuntu_nsg_name": {
+            "defaultValue": "LabUbuntu-nsg",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Compute/sshPublicKeys",
+            "apiVersion": "2021-11-01",
+            "name": "[parameters('sshPublicKeys_LabUbuntu_key_name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "Use": "Lab"
+            },
+            "properties": {
+                "publicKey": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDDZfe+v0ZnWncYOGeO4vOijKtp\r\nTTbe7oM1h5Jg+TLcRnZVFI0SImSAQSH3JOo2dP6BR4BK7tSBqtcZSDmPXI/LFkcc\r\nJ4SUnb9yqtt41nEvv1sm/PpQVy5P2yjr7CG0xEowjR52u5ojx385s3uoKHQxfXvL\r\nKHBf3xQF1RYAMLuJs4wznZ1ABCTbxgi6mmyra+rKq6yplJcXHYrVhywOZwWvtYG4\r\naZBWUkw9CqGqrql+a2GRf43wesRVmfc052v9Vzbtu6eIwvMLMQUDJv+ictn8XJPv\r\ntZBGxweG1lLyDlJ8/0Nc5kIdSfK4Guehp/AVqzKco6A7o8W5RclFb01CxvPjKreq\r\nSrYN04zfeapikCTPqDtZY7/eo20WXHADyd510hisiDxDUOivWaTkrRNSyXZP6Ffq\r\npCGgIZ0Q6yaf802IesvTs2MmR9dr1CUJEyAyovCE7TWXNW5UZi6Gx+4SrSmpxrJz\r\n/oFnYZdmLhGL20ItCFlJPt79egVZVZO1FPNsmdk= generated-by-azure\r\n"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('networkSecurityGroups_LabUbuntu_nsg_name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "Use": "Lab"
+            },
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "SSH",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 300,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('publicIPAddresses_LabUbuntu_ip_name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "Use": "Lab"
+            },
+            "sku": {
+                "name": "Basic",
+                "tier": "Regional"
+            },
+            "properties": {
+                "ipAddress": "23.101.172.13",
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('virtualNetworks_Lab_vnet_name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "Use": "Lab"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.1.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "default",
+                        "properties": {
+                            "addressPrefix": "10.1.0.0/24",
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    }
+                ],
+                "virtualNetworkPeerings": [],
+                "enableDdosProtection": false
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2021-11-01",
+            "name": "[parameters('virtualMachines_LabUbuntu_name')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_labubuntu643_name'))]"
+            ],
+            "tags": {
+                "Use": "Lab"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B1s"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "canonical",
+                        "offer": "0001-com-ubuntu-server-focal",
+                        "sku": "20_04-lts-gen2",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Linux",
+                        "name": "[concat(parameters('virtualMachines_LabUbuntu_name'), '_OsDisk_1_0bae049501544b1e92483964fe8724b0')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS"
+                        },
+                        "deleteOption": "Delete",
+                        "diskSizeGB": 30
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachines_LabUbuntu_name')]",
+                    "adminUsername": "azureuser",
+                    "adminPassword": "Bean2021!@",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": true,
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "path": "/home/azureuser/.ssh/authorized_keys",
+                                    "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDDZfe+v0ZnWncYOGeO4vOijKtp\r\nTTbe7oM1h5Jg+TLcRnZVFI0SImSAQSH3JOo2dP6BR4BK7tSBqtcZSDmPXI/LFkcc\r\nJ4SUnb9yqtt41nEvv1sm/PpQVy5P2yjr7CG0xEowjR52u5ojx385s3uoKHQxfXvL\r\nKHBf3xQF1RYAMLuJs4wznZ1ABCTbxgi6mmyra+rKq6yplJcXHYrVhywOZwWvtYG4\r\naZBWUkw9CqGqrql+a2GRf43wesRVmfc052v9Vzbtu6eIwvMLMQUDJv+ictn8XJPv\r\ntZBGxweG1lLyDlJ8/0Nc5kIdSfK4Guehp/AVqzKco6A7o8W5RclFb01CxvPjKreq\r\nSrYN04zfeapikCTPqDtZY7/eo20WXHADyd510hisiDxDUOivWaTkrRNSyXZP6Ffq\r\npCGgIZ0Q6yaf802IesvTs2MmR9dr1CUJEyAyovCE7TWXNW5UZi6Gx+4SrSmpxrJz\r\n/oFnYZdmLhGL20ItCFlJPt79egVZVZO1FPNsmdk= generated-by-azure\r\n"
+                                }
+                            ]
+                        },
+                        "provisionVMAgent": true,
+                        "patchSettings": {
+                            "patchMode": "ImageDefault",
+                            "assessmentMode": "ImageDefault"
+                        }
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true
+                    
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_labubuntu643_name'))]",
+                            "properties": {
+                                "deleteOption": "Delete"
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('networkSecurityGroups_LabUbuntu_nsg_name'), '/SSH')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_LabUbuntu_nsg_name'))]"
+            ],
+            "properties": {
+                "protocol": "TCP",
+                "sourcePortRange": "*",
+                "destinationPortRange": "22",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 300,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('virtualNetworks_Lab_vnet_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_Lab_vnet_name'))]"
+            ],
+            "properties": {
+                "addressPrefix": "10.1.0.0/24",
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Enabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('networkInterfaces_labubuntu643_name')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_LabUbuntu_ip_name'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_Lab_vnet_name'), 'default')]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_LabUbuntu_nsg_name'))]"
+            ],
+            "tags": {
+                "Use": "Lab"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAddress": "10.1.0.4",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_LabUbuntu_ip_name'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_Lab_vnet_name'), 'default')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableIPForwarding": false,
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_LabUbuntu_nsg_name'))]"
+                }
+            }
+        }
+    ]
+}
